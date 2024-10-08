@@ -1,8 +1,7 @@
-
 "use client";
-import Abi from "./abi.json"
+import Abi from "./abi.json";
 import { useState } from "react";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import axios from "axios";
 import {
   Box,
@@ -14,10 +13,12 @@ import {
   useToast,
   Image,
 } from "@chakra-ui/react";
-
+import { SportNFT } from "@/types";
+import { useActiveAccount, useActiveWallet } from "thirdweb/react";
+import { useAddress, useSigner } from "@thirdweb-dev/react";
 
 const contractABI = Abi;
-const contractAddress = "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0"; 
+const contractAddress = "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0";
 
 declare global {
   interface Window {
@@ -32,13 +33,15 @@ export default function CreateNFT() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
-
+  // const activeAccount = useActiveAccount();
+  const address = useAddress();
+  const signer = useSigner();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImage(file);
-      setPreviewUrl(URL.createObjectURL(file)); 
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -71,21 +74,25 @@ export default function CreateNFT() {
     }
   };
 
-
   const uploadToPinata = async (imageFile: File) => {
     const formData = new FormData();
     formData.append("file", imageFile);
 
-    const pinataApiKey = "48d4c8c5e597418efc05"; 
-    const pinataSecretApiKey = "5a6e6ad9ddfa45e5e5fdaa16074d448f004357d5b4b9de2bc3cc64b560cb7c38"; 
+    const pinataApiKey = "48d4c8c5e597418efc05";
+    const pinataSecretApiKey =
+      "5a6e6ad9ddfa45e5e5fdaa16074d448f004357d5b4b9de2bc3cc64b560cb7c38";
     try {
-      const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          pinata_api_key: pinataApiKey,
-          pinata_secret_api_key: pinataSecretApiKey,
+      const res = await axios.post(
+        "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            pinata_api_key: pinataApiKey,
+            pinata_secret_api_key: pinataSecretApiKey,
+          },
         },
-      });
+      );
       return res.data.IpfsHash;
     } catch (error) {
       console.error("Error uploading image: ", error);
@@ -103,15 +110,20 @@ export default function CreateNFT() {
   // Upload metadata to Pinata
   const uploadMetadataToPinata = async (metadata: object) => {
     const pinataApiKey = "48d4c8c5e597418efc05";
-    const pinataSecretApiKey = "5a6e6ad9ddfa45e5e5fdaa16074d448f004357d5b4b9de2bc3cc64b560cb7c38"; 
+    const pinataSecretApiKey =
+      "5a6e6ad9ddfa45e5e5fdaa16074d448f004357d5b4b9de2bc3cc64b560cb7c38";
 
     try {
-      const res = await axios.post("https://api.pinata.cloud/pinning/pinJSONToIPFS", metadata, {
-        headers: {
-          pinata_api_key: pinataApiKey,
-          pinata_secret_api_key: pinataSecretApiKey,
+      const res = await axios.post(
+        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        metadata,
+        {
+          headers: {
+            pinata_api_key: pinataApiKey,
+            pinata_secret_api_key: pinataSecretApiKey,
+          },
         },
-      });
+      );
       return res.data.IpfsHash;
     } catch (error) {
       console.error("Error uploading metadata: ", error);
@@ -126,7 +138,6 @@ export default function CreateNFT() {
     }
   };
 
-  
   const handleUpload = async () => {
     if (!title || !description || !image) {
       toast({
@@ -142,11 +153,9 @@ export default function CreateNFT() {
     setLoading(true);
 
     try {
-   
       const imageHash = await uploadToPinata(image);
       const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
 
-     
       const metadata = {
         name: title,
         description,
@@ -155,12 +164,23 @@ export default function CreateNFT() {
       const metadataHash = await uploadMetadataToPinata(metadata);
       const tokenURI = `https://gateway.pinata.cloud/ipfs/${metadataHash}`;
 
-
-      const signer = await connectWallet();
+      // const signer = await connectWallet();
       if (!signer) return;
 
-      const contract = new ethers.Contract(contractAddress, contractABI, signer);
-      const tx = await contract.mintNFT(signer.getAddress(), tokenURI);
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer,
+      ) as SportNFT;
+      if (!address) {
+        throw new Error("No active account found.");
+      }
+      const tx = await contract.mintNFT(
+        address,
+        tokenURI,
+        ethers.BigNumber.from(100),
+        ethers.BigNumber.from(100),
+      );
       await tx.wait();
 
       toast({
@@ -185,7 +205,14 @@ export default function CreateNFT() {
   };
 
   return (
-    <Box maxWidth="500px" mx="auto" mt="20" p="6" borderWidth="1px" borderRadius="lg">
+    <Box
+      maxWidth="500px"
+      mx="auto"
+      mt="20"
+      p="6"
+      borderWidth="1px"
+      borderRadius="lg"
+    >
       <FormControl mb="4">
         <FormLabel htmlFor="title">Title</FormLabel>
         <Input
@@ -227,5 +254,3 @@ export default function CreateNFT() {
     </Box>
   );
 }
-
-

@@ -1,5 +1,5 @@
 import type { Chain } from "thirdweb";
-import { polygonAmoy } from "./chains";
+import { polygon } from "./chains";
 
 type MarketplaceContract = {
   address: string;
@@ -11,10 +11,8 @@ type MarketplaceContract = {
  * Only list one marketplace contract address for each chain
  */
 export const MARKETPLACE_CONTRACTS: MarketplaceContract[] = [
-
   {
-    address: "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0",
-    chain: polygonAmoy,
+    address: "0x9cb27ab38731c60364fe32116D450C9Ba6f36D39",
+    chain: polygon,
   },
- 
 ];
