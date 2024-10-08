@@ -1,29 +1,4 @@
 
-<p align="center">
-    <br />
-    <a href="https://thirdweb.com">
-        <img src="https://github.com/thirdweb-dev/js/blob/main/legacy_packages/sdk/logo.svg?raw=true" width="200" alt=""/></a>
-    <br />
-</p>
-
-<h1 align="center"><a href='https://thirdweb.com/'>thirdweb</a> NFT Marketplace</h1>
-
-<p align="center"><strong>Build your own NFT Marketplace with thirdweb SDK</strong></p>
-
-## Features
-- Support for multiple collections
-- Support for multiple chains
-- Create listings with custom payment currencies
-- Public profile page: [vitalik.eth's Profile](https://marketplace.thirdweb-preview.com/profile/vitalik.eth)
-- _and [more to come](https://github.com/thirdweb-example/marketplace-template/issues?q=is%3Aissue+is%3Aopen+feature+request)_
-
-Want to request a feature? [Create a GitHub issue!](https://github.com/thirdweb-example/marketplace-template/issues/new)
-
-## Installation
-### 1. Clone the template or [fork it](https://github.com/thirdweb-example/marketplace-template/fork)
-```bash
-git clone https://github.com/thirdweb-example/marketplace-template
-```
 
 ### 2. Install the dependencies
 ```bash
