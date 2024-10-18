@@ -2,18 +2,7 @@
 
 import { NFT_CONTRACTS } from "@/consts/nft_contracts";
 import { Link } from "@chakra-ui/next-js";
-import {
-  Box,
-  Card,
-  CardBody,
-  CardHeader,
-  Flex,
-  Heading,
-  Image,
-  Stack,
-  StackDivider,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Flex, Heading, Image, Text } from "@chakra-ui/react";
 
 export default function Home() {
   return (
@@ -51,5 +40,3 @@ export default function Home() {
     </Flex>
   );
 }
-
-

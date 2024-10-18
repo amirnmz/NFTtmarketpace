@@ -1,7 +1,7 @@
 "use client";
 import Abi from "./abi.json";
 import { useState } from "react";
-import { BigNumber, ethers } from "ethers";
+import { ethers } from "ethers";
 import axios from "axios";
 import {
   Box,
@@ -37,6 +37,8 @@ export default function CreateNFT() {
   const address = useAddress();
   const signer = useSigner();
 
+  console.log(signer, "<<");
+  console.log(address, "<<Add");
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -153,6 +155,16 @@ export default function CreateNFT() {
     setLoading(true);
 
     try {
+      console.log(signer, "SIGNER<<");
+      if (!signer)
+        toast({
+          title: "Error",
+          description: "Please connect your wallet",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+
       const imageHash = await uploadToPinata(image);
       const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
 
@@ -165,13 +177,14 @@ export default function CreateNFT() {
       const tokenURI = `https://gateway.pinata.cloud/ipfs/${metadataHash}`;
 
       // const signer = await connectWallet();
-      if (!signer) return;
 
       const contract = new ethers.Contract(
         contractAddress,
         contractABI,
         signer,
       ) as SportNFT;
+
+      console.log(contract, "<<");
       if (!address) {
         throw new Error("No active account found.");
       }
