@@ -50,10 +50,17 @@ export function Navbar() {
             sport nft collection
           </Heading>
         </Box>
-        <Box display={{ lg: "block", base: "none" }}>
+        <Box
+          sx={{ justifyContent: "center", alignItems: "center" }}
+          display={{ lg: "flex", base: "none" }}
+        >
           <ToggleThemeButton />
           {account && wallet ? (
-            <ProfileButton address={account.address} wallet={wallet} />
+            <ConnectButton
+              client={client}
+              theme={colorMode}
+              connectButton={{ style: { height: "56px" } }}
+            />
           ) : (
             <ConnectButton
               client={client}
