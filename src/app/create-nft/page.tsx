@@ -13,9 +13,10 @@ import {
   useToast,
   Image,
 } from "@chakra-ui/react";
-import { SportNFT } from "@/types";
-import { useActiveAccount, useActiveWallet } from "thirdweb/react";
-import { useAddress, useSigner } from "@thirdweb-dev/react";
+import { useActiveAccount, useSendTransaction } from "thirdweb/react";
+import { getContract, prepareContractCall, sendTransaction } from "thirdweb";
+import { polygon } from "@/consts/chains";
+import { client } from "@/consts/client";
 
 const contractABI = Abi;
 const contractAddress = "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0";
@@ -34,11 +35,14 @@ export default function CreateNFT() {
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   // const activeAccount = useActiveAccount();
-  const address = useAddress();
-  const signer = useSigner();
+  const account = useActiveAccount();
 
-  console.log(signer, "<<");
-  console.log(address, "<<Add");
+  const contract = getContract({
+    address: contractAddress,
+    chain: polygon,
+    client,
+  });
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -46,7 +50,7 @@ export default function CreateNFT() {
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
-
+  console.log(BigInt(100), "<<");
   const connectWallet = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
@@ -155,15 +159,14 @@ export default function CreateNFT() {
     setLoading(true);
 
     try {
-      console.log(signer, "SIGNER<<");
-      if (!signer)
-        toast({
-          title: "Error",
-          description: "Please connect your wallet",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+      // if (!signer)
+      //   toast({
+      //     title: "Error",
+      //     description: "Please connect your wallet",
+      //     status: "error",
+      //     duration: 3000,
+      //     isClosable: true,
+      //   });
 
       const imageHash = await uploadToPinata(image);
       const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
@@ -178,31 +181,54 @@ export default function CreateNFT() {
 
       // const signer = await connectWallet();
 
-      const contract = new ethers.Contract(
-        contractAddress,
-        contractABI,
-        signer,
-      ) as SportNFT;
-
-      console.log(contract, "<<");
-      if (!address) {
+      // const contract = new ethers.Contract(
+      //   contractAddress,
+      //   contractABI,
+      //   signer,
+      // ) as SportNFT;
+      if (!account?.address) {
         throw new Error("No active account found.");
       }
-      const tx = await contract.mintNFT(
-        address,
-        tokenURI,
-        ethers.BigNumber.from(100),
-        ethers.BigNumber.from(100),
-      );
-      await tx.wait();
-
-      toast({
-        title: "Success",
-        description: "NFT created and minted successfully!",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
+      const transaction = prepareContractCall({
+        contract,
+        method:
+          "function mintNFT(address marketer, string tokenURI, uint256 minterRoyalty, uint256 marketerRoyalty) returns (uint256)",
+        params: [account.address, tokenURI, BigInt(100), BigInt(100)],
       });
+      const { transactionHash } = await sendTransaction({
+        transaction,
+        account,
+      });
+
+      // console.log(contract, "<<");
+      // if (!address) {
+      //   throw new Error("No active account found.");
+      // }
+      // const tx = await contract.mintNFT(
+      //   address,
+      //   tokenURI,
+      //   ethers.BigNumber.from(100),
+      //   ethers.BigNumber.from(100),
+      // );
+      // await tx.wait();
+
+      if (transactionHash)
+        toast({
+          title: "Success",
+          description: "NFT created and minted successfully!",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      else {
+        toast({
+          title: "Error",
+          description: "Something went wrong during the minting process.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error) {
       console.error("Error: ", error);
       toast({

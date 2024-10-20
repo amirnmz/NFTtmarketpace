@@ -56,11 +56,7 @@ export function Navbar() {
         >
           <ToggleThemeButton />
           {account && wallet ? (
-            <ConnectButton
-              client={client}
-              theme={colorMode}
-              connectButton={{ style: { height: "56px" } }}
-            />
+            <ProfileButton address={account.address} wallet={wallet} />
           ) : (
             <ConnectButton
               client={client}
