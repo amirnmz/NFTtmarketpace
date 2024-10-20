@@ -1,3 +1,4 @@
+
 "use client";
 
 import { client } from "@/consts/client";
@@ -15,6 +16,7 @@ import {
   MenuList,
   Image,
   useColorMode,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { blo } from "blo";
 import { FaRegMoon } from "react-icons/fa";
@@ -34,20 +36,23 @@ export function Navbar() {
   const wallet = useActiveWallet();
   const { colorMode } = useColorMode();
 
+  // Define colors based on the color mode
+  const bgColor = useColorModeValue("#ffffff", "#212f3d"); // White for light mode, dark color for dark mode
+  const textColor = useColorModeValue("black", "white"); // Black for light mode, white for dark mode
+
   return (
-    <Box py="30px" px={{ base: "20px", lg: "50px" }}>
+    <Box bgColor={bgColor} color={textColor} py="15px" px={{ base: "20px", lg: "50px" }}>
       <Flex direction="row" justifyContent="space-between">
         <Box my="auto">
           <Heading
             as={Link}
             href="/"
             _hover={{ textDecoration: "none" }}
-            bgGradient="linear(to-l, #7928CA, #FF0080)"
+            bgColor="black"
             bgClip="text"
-            fontWeight="extrabold"
+            fontWeight="bold"
           >
-            {/* Replace this with your own branding */}
-            sport nft collection
+            SPORT NFT
           </Heading>
         </Box>
         <Box
@@ -64,10 +69,14 @@ export function Navbar() {
               connectButton={{ style: { height: "56px" } }}
             />
           )}
-          {/* دکمه جدید برای رفتن به صفحه ساخت NFT */}
           <Link href="/create-nft">
             <Button ml="10px" height="56px">
               Create NFT
+            </Button>
+          </Link>
+          <Link href="/create-nft">
+            <Button ml="10px" height="56px">
+              VIRTUAL TOUR
             </Button>
           </Link>
         </Box>
@@ -88,9 +97,13 @@ function ProfileButton({
   const { data: ensName } = useGetENSName({ address });
   const { data: ensAvatar } = useGetENSAvatar({ ensName });
   const { colorMode } = useColorMode();
+  
+  // Define text color for the profile button
+  const textColor = useColorModeValue("black", "white");
+
   return (
     <Menu>
-      <MenuButton as={Button} height="56px">
+      <MenuButton as={Button} height="56px" color={textColor}>
         <Flex direction="row" gap="5">
           <Box my="auto">
             <FiUser size={30} />
@@ -108,7 +121,7 @@ function ProfileButton({
             <ConnectButton client={client} theme={colorMode} />
           </Box>
         </MenuItem>
-        <MenuItem as={Link} href="/profile" _hover={{ textDecoration: "none" }}>
+        <MenuItem as={Link} href="/profile" _hover={{ textDecoration: "none" }} color={textColor}>
           Profile {ensName ? `(${ensName})` : ""}
         </MenuItem>
         <MenuItem
