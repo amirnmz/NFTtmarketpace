@@ -17,10 +17,11 @@ import { FaTrophy, FaUsers, FaShieldAlt } from "react-icons/fa"; // Icons for vi
 import Image from 'next/image';
 
 import pic from "./headernft.webp";
+import NFTCard from "@/components/marketplace/card";
 
 export default function Home() {
   // Define color based on the color mode
-  const headingColor = useColorModeValue("teal.500", "teal.200");
+  const headingColor = useColorModeValue("gray.800", "teal.200");
   const textColor = useColorModeValue("gray.800", "gray.300");
   const buttonColorScheme = useColorModeValue("teal", "whiteAlpha");
 

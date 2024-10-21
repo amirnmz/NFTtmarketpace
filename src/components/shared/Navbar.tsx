@@ -74,7 +74,7 @@ export function Navbar() {
               Create NFT
             </Button>
           </Link>
-          <Link href="/create-nft">
+          <Link href="/virtualtour">
             <Button ml="10px" height="56px">
               VIRTUAL TOUR
             </Button>
