@@ -19,7 +19,7 @@ import { polygon } from "@/consts/chains";
 import { client } from "@/consts/client";
 
 const contractABI = Abi;
-const contractAddress = "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0";
+const contractAddress = process.env.NEXT_PUBLIC_SPORT_NFT_CONTRACT as string;
 
 declare global {
   interface Window {

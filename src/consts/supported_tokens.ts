@@ -1,5 +1,5 @@
 import type { Chain } from "thirdweb";
-import { avalancheFuji, polygonAmoy, sepolia } from "./chains";
+import { avalancheFuji, polygon, polygonAmoy, sepolia } from "./chains";
 
 export type Token = {
   tokenAddress: string;
@@ -75,5 +75,5 @@ export const NATIVE_TOKEN_ICON_MAP: { [key in Chain["id"]]: string } = {
   1: "/native-token-icons/eth.png",
   [sepolia.id]: "/native-token-icons/eth.png",
   [avalancheFuji.id]: "/native-token-icons/avax.png",
-  [polygonAmoy.id]: "/native-token-icons/matic.png",
+  [polygon.id]: "/native-token-icons/matic.png",
 };

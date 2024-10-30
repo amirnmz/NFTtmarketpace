@@ -11,6 +11,7 @@ import {
   Text,
   Button,
   Select,
+  Spinner,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import {
@@ -31,7 +32,7 @@ export function AllNftsGrid() {
     ? supplyInfo.endTokenId - supplyInfo.startTokenId + 1n
     : 0n;
   const numberOfPages: number = Number(
-    (totalItems + BigInt(itemsPerPage) - 1n) / BigInt(itemsPerPage)
+    (totalItems + BigInt(itemsPerPage) - 1n) / BigInt(itemsPerPage),
   );
   const pages: { start: number; count: number }[] = [];
 
@@ -50,7 +51,7 @@ export function AllNftsGrid() {
       contract: nftContract,
       start: pages[currentPageIndex].start,
       count: pages[currentPageIndex].count,
-    }
+    },
   );
   const len = allNFTs?.length ?? 0;
   const columns = useBreakpointValue({
@@ -83,7 +84,9 @@ export function AllNftsGrid() {
             </Box>
           ))
         ) : (
-          <Box mx="auto">Loading...</Box>
+          <Box mx="auto">
+            <Spinner />
+          </Box>
         )}
       </SimpleGrid>
       <Box

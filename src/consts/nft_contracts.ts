@@ -22,9 +22,10 @@ export const NFT_CONTRACTS: NftContract[] = [
   {
     address: "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0",
     chain: polygon,
-    title: "Mata NFT",
+    title: "Sport NFT",
     thumbnailUrl:
-      "https://orange-nearby-cardinal-511.mypinata.cloud/ipfs/QmVembeT2MiYFpMkvGkPzYP2EXHtrxG1xyqYUMvbHXPFZ6",
+      // "https://orange-nearby-cardinal-511.mypinata.cloud/ipfs/QmVembeT2MiYFpMkvGkPzYP2EXHtrxG1xyqYUMvbHXPFZ6",
+      "/erc721/icon.png",
     type: "ERC721",
   },
 ];

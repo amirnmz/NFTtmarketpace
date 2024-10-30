@@ -2,7 +2,7 @@
 
 import { ProfileSection } from "@/components/profile-page/Profile";
 import { useResolveENSAddress } from "@/hooks/useResolveENSAddress";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Spinner } from "@chakra-ui/react";
 import { notFound } from "next/navigation";
 import { isAddress } from "thirdweb/utils";
 
@@ -20,7 +20,7 @@ export default function PublicProfilePage({
   if (isLoading) {
     return (
       <Box>
-        <Text>Loading...</Text>
+        <Spinner />
       </Box>
     );
   }

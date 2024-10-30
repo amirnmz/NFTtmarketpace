@@ -8,12 +8,6 @@ import { useActiveAccount, useConnectModal } from "thirdweb/react";
 
 export default function ProfilePage() {
   const account = useActiveAccount();
-  const { connect } = useConnectModal();
-  useEffect(() => {
-    if (!account) {
-      connect({ client });
-    }
-  }, [account, connect]);
   if (!account)
     return (
       <Box>

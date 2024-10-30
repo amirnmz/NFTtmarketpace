@@ -30,6 +30,7 @@ import {
 } from "thirdweb/react";
 import type { Wallet } from "thirdweb/wallets";
 import { SideMenu } from "./SideMenu";
+import { ConnectBtn } from "@/components/shared/ConnectBtn";
 
 export function Navbar() {
   const account = useActiveAccount();
@@ -63,11 +64,7 @@ export function Navbar() {
           {account && wallet ? (
             <ProfileButton address={account.address} wallet={wallet} />
           ) : (
-            <ConnectButton
-              client={client}
-              theme={colorMode}
-              connectButton={{ style: { height: "56px" } }}
-            />
+            <ConnectBtn connectButton={{ style: { height: "56px" } }} />
           )}
           <Link href="/create-nft">
             <Button ml="10px" height="56px">

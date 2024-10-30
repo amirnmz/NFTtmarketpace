@@ -4,6 +4,7 @@ import {
   Heading,
   Img,
   SimpleGrid,
+  Spinner,
   Tab,
   TabList,
   Tabs,
@@ -21,9 +22,6 @@ import {
   useActiveAccount,
   useReadContract,
 } from "thirdweb/react";
-import { getContract, toEther } from "thirdweb";
-import { client } from "@/consts/client";
-import { getOwnedERC721s } from "@/extensions/getOwnedERC721s";
 import { OwnedItem } from "./OwnedItem";
 import { getAllValidListings } from "thirdweb/extensions/marketplace";
 import { MARKETPLACE_CONTRACTS } from "@/consts/marketplace_contract";
@@ -32,6 +30,8 @@ import { getOwnedERC1155s } from "@/extensions/getOwnedERC1155s";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { useGetENSAvatar } from "@/hooks/useGetENSAvatar";
 import { useGetENSName } from "@/hooks/useGetENSName";
+import { useProfile } from "@/hooks/api/useProfile";
+import { useGetUserNfts } from "@/hooks/api/useGetUserNfts";
 
 type Props = {
   address: string;
@@ -44,54 +44,10 @@ export function ProfileSection(props: Props) {
   const { data: ensName } = useGetENSName({ address });
   const { data: ensAvatar } = useGetENSAvatar({ ensName });
   const [tabIndex, setTabIndex] = useState<number>(0);
-  const [selectedCollection, setSelectedCollection] = useState<NftContract>(
-    NFT_CONTRACTS[0]
-  );
-  const contract = getContract({
-    address: selectedCollection.address,
-    chain: selectedCollection.chain,
-    client,
-  });
 
-  const {
-    data,
-    error,
-    isLoading: isLoadingOwnedNFTs,
-  } = useReadContract(
-    selectedCollection.type === "ERC1155" ? getOwnedERC1155s : getOwnedERC721s,
-    {
-      contract,
-      owner: address,
-      requestPerSec: 50,
-      queryOptions: {
-        enabled: !!address,
-      },
-    }
-  );
+  const { data: user } = useProfile();
+  const { data: nfts, isLoading } = useGetUserNfts(address);
 
-  const chain = contract.chain;
-  const marketplaceContractAddress = MARKETPLACE_CONTRACTS.find(
-    (o) => o.chain.id === chain.id
-  )?.address;
-  if (!marketplaceContractAddress) throw Error("No marketplace contract found");
-  const marketplaceContract = getContract({
-    address: marketplaceContractAddress,
-    chain,
-    client,
-  });
-  const { data: allValidListings, isLoading: isLoadingValidListings } =
-    useReadContract(getAllValidListings, {
-      contract: marketplaceContract,
-      queryOptions: { enabled: data && data.length > 0 },
-    });
-  const listings = allValidListings?.length
-    ? allValidListings.filter(
-        (item) =>
-          item.assetContractAddress.toLowerCase() ===
-            contract.address.toLowerCase() &&
-          item.creatorAddress.toLowerCase() === address.toLowerCase()
-      )
-    : [];
   const columns = useBreakpointValue({ base: 1, sm: 2, md: 2, lg: 2, xl: 4 });
   return (
     <Box px={{ lg: "50px", base: "20px" }}>
@@ -102,19 +58,15 @@ export function ProfileSection(props: Props) {
           rounded="8px"
         />
         <Box my="auto">
-          <Heading>{ensName ?? "Unnamed"}</Heading>
+          <Heading>{user?.nickname ?? "Unnamed"}</Heading>
           <Text color="gray">{shortenAddress(address)}</Text>
         </Box>
       </Flex>
 
       <Flex direction={{ lg: "row", base: "column" }} gap="10" mt="20px">
-        <ProfileMenu
-          selectedCollection={selectedCollection}
-          setSelectedCollection={setSelectedCollection}
-        />
-        {isLoadingOwnedNFTs ? (
+        {isLoading ? (
           <Box>
-            <Text>Loading...</Text>
+            <Spinner />
           </Box>
         ) : (
           <>
@@ -127,29 +79,19 @@ export function ProfileSection(props: Props) {
                   defaultIndex={0}
                 >
                   <TabList>
-                    <Tab>Owned ({data?.length})</Tab>
-                    <Tab>Listings ({listings.length || 0})</Tab>
+                    <Tab>Owned ({nfts?.result?.length})</Tab>
+                    {/*<Tab>Listings ({listings.length || 0})</Tab>*/}
                     {/* <Tab>Auctions ({allAuctions?.length || 0})</Tab> */}
                   </TabList>
                 </Tabs>
-                <Link
-                  href={`/collection/${selectedCollection.chain.id}/${selectedCollection.address}`}
-                  color="gray"
-                >
-                  View collection <ExternalLinkIcon mx="2px" />
-                </Link>
               </Flex>
               <SimpleGrid columns={columns} spacing={4} p={4}>
                 {tabIndex === 0 ? (
                   <>
-                    {data && data.length > 0 ? (
+                    {nfts && nfts?.result?.length > 0 ? (
                       <>
-                        {data?.map((item) => (
-                          <OwnedItem
-                            key={item.id.toString()}
-                            nftCollection={contract}
-                            nft={item}
-                          />
+                        {nfts?.result?.map((item) => (
+                          <OwnedItem key={item.id.toString()} nft={item} />
                         ))}
                       </>
                     ) : (
@@ -158,8 +100,8 @@ export function ProfileSection(props: Props) {
                           {isYou
                             ? "You"
                             : ensName
-                            ? ensName
-                            : shortenAddress(address)}{" "}
+                              ? ensName
+                              : shortenAddress(address)}{" "}
                           {isYou ? "do" : "does"} not own any NFT in this
                           collection
                         </Text>
@@ -168,41 +110,41 @@ export function ProfileSection(props: Props) {
                   </>
                 ) : (
                   <>
-                    {listings && listings.length > 0 ? (
-                      <>
-                        {listings?.map((item) => (
-                          <Box
-                            key={item.id}
-                            rounded="12px"
-                            as={Link}
-                            href={`/collection/${contract.chain.id}/${
-                              contract.address
-                            }/token/${item.asset.id.toString()}`}
-                            _hover={{ textDecoration: "none" }}
-                            w={250}
-                          >
-                            <Flex direction="column">
-                              <MediaRenderer
-                                client={client}
-                                src={item.asset.metadata.image}
-                              />
-                              <Text mt="12px">
-                                {item.asset?.metadata?.name ?? "Unknown item"}
-                              </Text>
-                              <Text>Price</Text>
-                              <Text>
-                                {toEther(item.pricePerToken)}{" "}
-                                {item.currencyValuePerToken.symbol}
-                              </Text>
-                            </Flex>
-                          </Box>
-                        ))}
-                      </>
-                    ) : (
-                      <Box>
-                        You do not have any listing with this collection
-                      </Box>
-                    )}
+                    {/*{listings && listings.length > 0 ? (*/}
+                    {/*  <>*/}
+                    {/*    {listings?.map((item) => (*/}
+                    {/*      <Box*/}
+                    {/*        key={item.id}*/}
+                    {/*        rounded="12px"*/}
+                    {/*        as={Link}*/}
+                    {/*        href={`/collection/${contract.chain.id}/${*/}
+                    {/*          contract.address*/}
+                    {/*        }/token/${item.asset.id.toString()}`}*/}
+                    {/*        _hover={{ textDecoration: "none" }}*/}
+                    {/*        w={250}*/}
+                    {/*      >*/}
+                    {/*        <Flex direction="column">*/}
+                    {/*          <MediaRenderer*/}
+                    {/*            client={client}*/}
+                    {/*            src={item.asset.metadata.image}*/}
+                    {/*          />*/}
+                    {/*          <Text mt="12px">*/}
+                    {/*            {item.asset?.metadata?.name ?? "Unknown item"}*/}
+                    {/*          </Text>*/}
+                    {/*          <Text>Price</Text>*/}
+                    {/*          <Text>*/}
+                    {/*            {toEther(item.pricePerToken)}{" "}*/}
+                    {/*            {item.currencyValuePerToken.symbol}*/}
+                    {/*          </Text>*/}
+                    {/*        </Flex>*/}
+                    {/*      </Box>*/}
+                    {/*    ))}*/}
+                    {/*  </>*/}
+                    {/*) : (*/}
+                    {/*  <Box>*/}
+                    {/*    You do not have any listing with this collection*/}
+                    {/*  </Box>*/}
+                    {/*)}*/}
                   </>
                 )}
               </SimpleGrid>

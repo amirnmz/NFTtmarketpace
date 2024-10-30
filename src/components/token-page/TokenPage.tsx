@@ -19,7 +19,6 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import { balanceOf, getNFT as getERC1155 } from "thirdweb/extensions/erc1155";
 import { getNFT as getERC721 } from "thirdweb/extensions/erc721";
 import {
   MediaRenderer,
@@ -27,12 +26,11 @@ import {
   useReadContract,
 } from "thirdweb/react";
 import { shortenAddress } from "thirdweb/utils";
-import { NftAttributes } from "./NftAttributes";
-import { CreateListing } from "./CreateListing";
 import { useMarketplaceContext } from "@/hooks/useMarketplaceContext";
 import dynamic from "next/dynamic";
 import { NftDetails } from "./NftDetails";
 import RelatedListings from "./RelatedListings";
+import { CreateListing } from "@/components/token-page/CreateListing";
 
 const CancelListingButton = dynamic(() => import("./CancelListingButton"), {
   ssr: false,
@@ -55,37 +53,26 @@ export function Token(props: Props) {
     isRefetchingAllListings,
     listingsInSelectedCollection,
   } = useMarketplaceContext();
+
   const { tokenId } = props;
   const account = useActiveAccount();
 
-  const { data: nft, isLoading: isLoadingNFT } = useReadContract(
-    type === "ERC1155" ? getERC1155 : getERC721,
-    {
-      tokenId: BigInt(tokenId),
-      contract: nftContract,
-      includeOwner: true,
-    }
-  );
-
-  const { data: ownedQuantity1155 } = useReadContract(balanceOf, {
-    contract: nftContract,
-    owner: account?.address!,
+  const { data: nft, isLoading: isLoadingNFT } = useReadContract(getERC721, {
     tokenId: tokenId,
-    queryOptions: {
-      enabled: !!account?.address && type === "ERC1155",
-    },
+    contract: nftContract,
+    includeOwner: true,
   });
 
   const listings = (listingsInSelectedCollection || []).filter(
     (item) =>
       item.assetContractAddress.toLowerCase() ===
-        nftContract.address.toLowerCase() && item.asset.id === BigInt(tokenId)
+        nftContract.address.toLowerCase() && item.asset.id === BigInt(tokenId),
   );
 
   const auctions = (allAuctions || []).filter(
     (item) =>
       item.assetContractAddress.toLowerCase() ===
-        nftContract.address.toLowerCase() && item.asset.id === BigInt(tokenId)
+        nftContract.address.toLowerCase() && item.asset.id === BigInt(tokenId),
   );
 
   const allLoaded = !isLoadingNFT && !isLoading && !isRefetchingAllListings;
@@ -124,11 +111,11 @@ export function Token(props: Props) {
                 </AccordionItem>
               )}
 
-              {nft?.metadata?.attributes &&
-                // @ts-ignore TODO FIx later
-                nft?.metadata?.attributes.length > 0 && (
-                  <NftAttributes attributes={nft.metadata.attributes} />
-                )}
+              {/*{nft?.metadata?.attributes &&*/}
+              {/*  // @ts-ignore TODO FIx later*/}
+              {/*  nft?.metadata?.attributes.length > 0 && (*/}
+              {/*    <NftAttributes attributes={nft.metadata.attributes} />*/}
+              {/*  )}*/}
 
               {nft && <NftDetails nft={nft} />}
             </Accordion>
@@ -148,31 +135,20 @@ export function Token(props: Props) {
             <Text># {nft?.id.toString()}</Text>
             <Heading>{nft?.metadata.name}</Heading>
             <br />
-            {type === "ERC1155" ? (
-              <>
-                {account && ownedQuantity1155 && (
-                  <>
-                    <Text>You own</Text>
-                    <Heading>{ownedQuantity1155.toString()}</Heading>
-                  </>
-                )}
-              </>
-            ) : (
-              <>
-                <Text>Current owner</Text>
-                <Flex direction="row">
-                  <Heading>
-                    {nft?.owner ? shortenAddress(nft.owner) : "N/A"}{" "}
-                  </Heading>
-                  {ownedByYou && <Text color="gray">(You)</Text>}
-                </Flex>
-              </>
-            )}
-            {account &&
-              nft &&
-              (ownedByYou || (ownedQuantity1155 && ownedQuantity1155 > 0n)) && (
+
+            <>
+              <Text>Current owner</Text>
+              <Flex direction="row">
+                <Heading>
+                  {nft?.owner ? shortenAddress(nft.owner) : "N/A"}{" "}
+                </Heading>
+                {ownedByYou && <Text color="gray">(You)</Text>}
+              </Flex>
+              {account && nft && ownedByYou && (
                 <CreateListing tokenId={nft?.id} account={account} />
               )}
+            </>
+
             <Accordion
               mt="30px"
               sx={{ container: {} }}

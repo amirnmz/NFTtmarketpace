@@ -16,10 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { NATIVE_TOKEN_ADDRESS, sendAndConfirmTransaction } from "thirdweb";
-import {
-  isApprovedForAll as isApprovedForAll1155,
-  setApprovalForAll as setApprovalForAll1155,
-} from "thirdweb/extensions/erc1155";
+
 import {
   isApprovedForAll as isApprovedForAll721,
   setApprovalForAll as setApprovalForAll721,
@@ -66,42 +63,14 @@ export function CreateListing(props: Props) {
     <>
       <br />
       <Flex direction="column" w={{ base: "90vw", lg: "430px" }} gap="10px">
-        {type === "ERC1155" ? (
-          <>
-            <Flex
-              direction="row"
-              flexWrap="wrap"
-              justifyContent="space-between"
-            >
-              <Box>
-                <Text>Price</Text>
-                <Input
-                  type="number"
-                  ref={priceRef}
-                  placeholder="Enter a price"
-                />
-              </Box>
-              <Box>
-                <Text>Quantity</Text>
-                <Input
-                  type="number"
-                  ref={qtyRef}
-                  defaultValue={1}
-                  placeholder="Quantity to sell"
-                />
-              </Box>
-            </Flex>
-          </>
-        ) : (
-          <>
-            <Text>Price</Text>
-            <Input
-              type="number"
-              ref={priceRef}
-              placeholder="Enter a price for your listing"
-            />
-          </>
-        )}
+        <>
+          <Text>Price</Text>
+          <Input
+            type="number"
+            ref={priceRef}
+            placeholder="Enter a price for your listing"
+          />
+        </>
         <Menu>
           <MenuButton minH="48px" as={Button} rightIcon={<ChevronDownIcon />}>
             {currency ? (
@@ -180,8 +149,7 @@ export function CreateListing(props: Props) {
             }
 
             // Check for approval
-            const checkApprove =
-              type === "ERC1155" ? isApprovedForAll1155 : isApprovedForAll721;
+            const checkApprove = isApprovedForAll721;
 
             const isApproved = await checkApprove({
               contract: nftContract,
@@ -190,10 +158,7 @@ export function CreateListing(props: Props) {
             });
 
             if (!isApproved) {
-              const setApproval =
-                type === "ERC1155"
-                  ? setApprovalForAll1155
-                  : setApprovalForAll721;
+              const setApproval = setApprovalForAll721;
 
               const approveTx = setApproval({
                 contract: nftContract,
@@ -211,7 +176,7 @@ export function CreateListing(props: Props) {
               contract: marketplaceContract,
               assetContractAddress: nftContract.address,
               tokenId,
-              quantity: type === "ERC721" ? 1n : _qty,
+              quantity: _qty,
               currencyContractAddress: currency?.tokenAddress,
               pricePerToken: value,
             });

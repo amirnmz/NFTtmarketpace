@@ -27,6 +27,7 @@ import {
   useActiveWallet,
   useDisconnect,
 } from "thirdweb/react";
+import { ConnectBtn } from "@/components/shared/ConnectBtn";
 
 export function SideMenu() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -34,7 +35,6 @@ export function SideMenu() {
   const { disconnect } = useDisconnect();
   const account = useActiveAccount();
   const { data: ensName } = useGetENSName({ address: account?.address });
-  const { data: ensAvatar } = useGetENSAvatar({ ensName });
   const { colorMode, toggleColorMode } = useColorMode();
   const wallet = useActiveWallet();
 
@@ -58,7 +58,7 @@ export function SideMenu() {
           </DrawerHeader>
           <DrawerBody>
             <Box>
-              <ConnectButton theme={colorMode} client={client} />
+              <ConnectBtn />
             </Box>
             {account && (
               <Link href="/profile">
