@@ -59,7 +59,7 @@ export default function SignIn() {
             />
             {account ? (
               <Button
-                isLoading={isPending}
+                isLoading={isPending || isLoading}
                 onClick={() =>
                   mutate({ wallet_address: account.address, nickname })
                 }

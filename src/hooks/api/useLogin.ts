@@ -65,7 +65,7 @@ export default function useLogin() {
     }
 
     return loginNewBack({
-      wallet_address: values.wallet_address,
+      wallet_address: account.address,
       nickname: values.nickname,
       typeData,
       signature,
