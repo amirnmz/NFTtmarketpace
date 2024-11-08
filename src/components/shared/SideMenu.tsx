@@ -28,6 +28,7 @@ import {
   useDisconnect,
 } from "thirdweb/react";
 import { ConnectBtn } from "@/components/shared/ConnectBtn";
+import { useAuth } from "@/hooks/useAuth";
 
 export function SideMenu() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -37,6 +38,7 @@ export function SideMenu() {
   const { data: ensName } = useGetENSName({ address: account?.address });
   const { colorMode, toggleColorMode } = useColorMode();
   const wallet = useActiveWallet();
+  const { logout } = useAuth();
 
   return (
     <>
@@ -71,6 +73,7 @@ export function SideMenu() {
               <Button
                 onClick={() => {
                   if (wallet) disconnect(wallet);
+                  logout();
                 }}
               >
                 Logout

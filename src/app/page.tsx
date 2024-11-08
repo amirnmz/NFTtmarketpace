@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Link } from "@chakra-ui/next-js";
@@ -14,7 +13,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { FaTrophy, FaUsers, FaShieldAlt } from "react-icons/fa"; // Icons for visual appeal
-import Image from 'next/image';
+import Image from "next/image";
 
 import pic from "./headernft.webp";
 import NFTCard from "@/components/marketplace/card";
@@ -55,20 +54,19 @@ export default function Home() {
               </Text>
               <Button
                 as={Link}
-                href="/marketplace"
+                href="/market"
                 colorScheme={buttonColorScheme}
                 size="lg"
               >
                 Explore Marketplace
               </Button>
             </Box>
-            <Box flex="1" display={{ base: "none", md: "block" }} ml={{ md: 10 }}>
-              <Image
-                src={pic}
-                width={400}
-                height={400}
-                alt="Sport NFT Image"
-              />
+            <Box
+              flex="1"
+              display={{ base: "none", md: "block" }}
+              ml={{ md: 10 }}
+            >
+              <Image src={pic} width={400} height={400} alt="Sport NFT Image" />
             </Box>
           </Flex>
         </Container>
@@ -77,7 +75,13 @@ export default function Home() {
       {/* About Section */}
       <Box py={16} bg={useColorModeValue("gray.100", "gray.700")} px={4}>
         <Container maxW="container.xl">
-          <Heading as="h3" size="lg" mb={8} textAlign="center" color={headingColor}>
+          <Heading
+            as="h3"
+            size="lg"
+            mb={8}
+            textAlign="center"
+            color={headingColor}
+          >
             Why Choose Our Marketplace
           </Heading>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10}>
@@ -93,7 +97,8 @@ export default function Home() {
                 Exclusive Access
               </Heading>
               <Text color={textColor}>
-                Get exclusive access to rare and valuable sports NFTs that you won’t find anywhere else.
+                Get exclusive access to rare and valuable sports NFTs that you
+                won’t find anywhere else.
               </Text>
             </Box>
             <Box
@@ -108,7 +113,8 @@ export default function Home() {
                 Community Engagement
               </Heading>
               <Text color={textColor}>
-                Join our community of collectors and sports enthusiasts to share, trade, and connect.
+                Join our community of collectors and sports enthusiasts to
+                share, trade, and connect.
               </Text>
             </Box>
             <Box
@@ -123,7 +129,8 @@ export default function Home() {
                 Secure Transactions
               </Heading>
               <Text color={textColor}>
-                Our platform ensures secure transactions for peace of mind when buying or selling NFTs.
+                Our platform ensures secure transactions for peace of mind when
+                buying or selling NFTs.
               </Text>
             </Box>
           </SimpleGrid>

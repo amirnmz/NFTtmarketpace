@@ -19,6 +19,10 @@ type NFT = BaseEntity & {
   owner_wallet: string;
 
   block_number: number;
+
+  is_listed: boolean;
+
+  price: string;
 };
 
 type PaginationType = {
@@ -31,6 +35,17 @@ type PaginationType = {
   count: number;
   take: number;
 };
+
+type PaginationTypeFront = {
+  activePage: number;
+  totalPages: number;
+  setPage: (pageNumber: number) => void;
+  setTotal: (total: number) => void;
+  next: () => void;
+  previous: () => void;
+  first: () => void;
+};
+
 type BulkData<T> = {
   result: T[];
   pagination: PaginationType;

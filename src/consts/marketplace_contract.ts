@@ -12,7 +12,7 @@ type MarketplaceContract = {
  */
 export const MARKETPLACE_CONTRACTS: MarketplaceContract[] = [
   {
-    address: "0x9cb27ab38731c60364fe32116D450C9Ba6f36D39",
+    address: process.env.NEXT_PUBLIC_SPORT_NFT_MARKET_CONTRACT as string,
     chain: polygon,
   },
 ];

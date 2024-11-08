@@ -1,4 +1,3 @@
-
 "use client";
 
 import { client } from "@/consts/client";
@@ -31,6 +30,7 @@ import {
 import type { Wallet } from "thirdweb/wallets";
 import { SideMenu } from "./SideMenu";
 import { ConnectBtn } from "@/components/shared/ConnectBtn";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
   const account = useActiveAccount();
@@ -42,7 +42,12 @@ export function Navbar() {
   const textColor = useColorModeValue("black", "white"); // Black for light mode, white for dark mode
 
   return (
-    <Box bgColor={bgColor} color={textColor} py="15px" px={{ base: "20px", lg: "50px" }}>
+    <Box
+      bgColor={bgColor}
+      color={textColor}
+      py="15px"
+      px={{ base: "20px", lg: "50px" }}
+    >
       <Flex direction="row" justifyContent="space-between">
         <Box my="auto">
           <Heading
@@ -94,10 +99,10 @@ function ProfileButton({
   const { data: ensName } = useGetENSName({ address });
   const { data: ensAvatar } = useGetENSAvatar({ ensName });
   const { colorMode } = useColorMode();
-  
+
   // Define text color for the profile button
   const textColor = useColorModeValue("black", "white");
-
+  const { logout } = useAuth();
   return (
     <Menu>
       <MenuButton as={Button} height="56px" color={textColor}>
@@ -118,12 +123,18 @@ function ProfileButton({
             <ConnectButton client={client} theme={colorMode} />
           </Box>
         </MenuItem>
-        <MenuItem as={Link} href="/profile" _hover={{ textDecoration: "none" }} color={textColor}>
+        <MenuItem
+          as={Link}
+          href="/profile"
+          _hover={{ textDecoration: "none" }}
+          color={textColor}
+        >
           Profile {ensName ? `(${ensName})` : ""}
         </MenuItem>
         <MenuItem
           onClick={() => {
             if (wallet) disconnect(wallet);
+            logout();
           }}
         >
           Logout

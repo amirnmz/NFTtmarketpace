@@ -153,12 +153,19 @@ export default function MarketplaceProvider({
   );
 
   const isLoading =
-    isChecking1155 ||
     isChecking721 ||
     isLoadingAuctions ||
     isLoadingContractMetadata ||
     isLoadingValidListings ||
     isLoadingSupplyInfo;
+
+  console.log(
+    isChecking721,
+    isLoadingAuctions,
+    isLoadingContractMetadata,
+    isLoadingValidListings,
+    isLoadingSupplyInfo,
+  );
 
   const supportedTokens: Token[] =
     SUPPORTED_TOKENS.find(
@@ -183,19 +190,19 @@ export default function MarketplaceProvider({
       }}
     >
       {children}
-      {isLoading && (
-        <Box
-          position="fixed"
-          bottom="10px"
-          right="10px"
-          backgroundColor="rgba(0, 0, 0, 0.7)"
-          padding="10px"
-          borderRadius="md"
-          zIndex={1000}
-        >
-          <Spinner size="lg" color="purple" />
-        </Box>
-      )}
+      {/*{isLoading && (*/}
+      {/*  <Box*/}
+      {/*    position="fixed"*/}
+      {/*    bottom="10px"*/}
+      {/*    right="10px"*/}
+      {/*    backgroundColor="rgba(0, 0, 0, 0.7)"*/}
+      {/*    padding="10px"*/}
+      {/*    borderRadius="md"*/}
+      {/*    zIndex={1000}*/}
+      {/*  >*/}
+      {/*    <Spinner size="lg" color="purple" />*/}
+      {/*  </Box>*/}
+      {/*)}*/}
     </MarketplaceContext.Provider>
   );
 }

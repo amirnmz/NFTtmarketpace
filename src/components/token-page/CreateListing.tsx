@@ -12,10 +12,13 @@ import {
   Text,
   Image,
   useToast,
-  Box,
 } from "@chakra-ui/react";
-import { useRef, useState } from "react";
-import { NATIVE_TOKEN_ADDRESS, sendAndConfirmTransaction } from "thirdweb";
+import { useEffect, useRef, useState } from "react";
+import {
+  NATIVE_TOKEN_ADDRESS,
+  prepareContractCall,
+  sendAndConfirmTransaction,
+} from "thirdweb";
 
 import {
   isApprovedForAll as isApprovedForAll721,
@@ -24,19 +27,22 @@ import {
 import { createListing } from "thirdweb/extensions/marketplace";
 import {
   useActiveWalletChain,
+  useSendTransaction,
   useSwitchActiveWalletChain,
 } from "thirdweb/react";
 import type { Account } from "thirdweb/wallets";
+import { ethers } from "ethers";
 
 type Props = {
   tokenId: bigint;
+  refetch: () => void;
   account: Account;
 };
 
 export function CreateListing(props: Props) {
   const priceRef = useRef<HTMLInputElement>(null);
-  const qtyRef = useRef<HTMLInputElement>(null);
-  const { tokenId, account } = props;
+
+  const { tokenId, account, refetch } = props;
   const switchChain = useSwitchActiveWalletChain();
   const activeChain = useActiveWalletChain();
   const [currency, setCurrency] = useState<Token>();
@@ -46,7 +52,6 @@ export function CreateListing(props: Props) {
     nftContract,
     marketplaceContract,
     refetchAllListings,
-    type,
     supportedTokens,
   } = useMarketplaceContext();
   const chain = marketplaceContract.chain;
@@ -57,8 +62,32 @@ export function CreateListing(props: Props) {
     icon: NATIVE_TOKEN_ICON_MAP[chain.id] || "",
   };
 
-  const options: Token[] = [nativeToken].concat(supportedTokens);
+  const { mutateAsync: sendTransaction, isPending } = useSendTransaction();
 
+  const createListing = (value: string) => {
+    const transaction = prepareContractCall({
+      contract: marketplaceContract,
+      method: "function listNFT(uint256 tokenId, uint256 price)",
+      params: [tokenId, BigInt(ethers.utils.parseEther(value)?.toString())],
+    });
+    sendTransaction(transaction)
+      .then(() => {
+        refetchAllListings();
+        refetch();
+        toast({
+          title: "Listing created successfully",
+          status: "success",
+          isClosable: true,
+          duration: 5000,
+        });
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  };
+
+  const options: Token[] = [nativeToken].concat(supportedTokens);
+  const [isApproving, setIsApproving] = useState(false);
   return (
     <>
       <br />
@@ -114,7 +143,9 @@ export function CreateListing(props: Props) {
         </Menu>
         <Button
           isDisabled={!currency}
+          isLoading={isPending || isApproving}
           onClick={async () => {
+            setIsApproving(true);
             const value = priceRef.current?.value;
             if (!value) {
               return toast({
@@ -134,18 +165,6 @@ export function CreateListing(props: Props) {
             }
             if (activeChain?.id !== nftContract.chain.id) {
               await switchChain(nftContract.chain);
-            }
-            const _qty = BigInt(qtyRef.current?.value ?? 1);
-            if (type === "ERC1155") {
-              if (!_qty || _qty <= 0n) {
-                return toast({
-                  title: "Error",
-                  description: "Invalid quantity",
-                  status: "error",
-                  isClosable: true,
-                  duration: 5000,
-                });
-              }
             }
 
             // Check for approval
@@ -171,21 +190,9 @@ export function CreateListing(props: Props) {
                 account,
               });
             }
+            setIsApproving(false);
 
-            const transaction = createListing({
-              contract: marketplaceContract,
-              assetContractAddress: nftContract.address,
-              tokenId,
-              quantity: _qty,
-              currencyContractAddress: currency?.tokenAddress,
-              pricePerToken: value,
-            });
-
-            await sendAndConfirmTransaction({
-              transaction,
-              account,
-            });
-            refetchAllListings();
+            createListing(value);
           }}
         >
           List

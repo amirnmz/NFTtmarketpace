@@ -29,8 +29,10 @@ import { shortenAddress } from "thirdweb/utils";
 import { useMarketplaceContext } from "@/hooks/useMarketplaceContext";
 import dynamic from "next/dynamic";
 import { NftDetails } from "./NftDetails";
-import RelatedListings from "./RelatedListings";
 import { CreateListing } from "@/components/token-page/CreateListing";
+import { AddressZero } from "@ethersproject/constants";
+import { useInterval } from "@chakra-ui/icons";
+import { useGetSingleNFT } from "@/hooks/api/useGetSingleNFT";
 
 const CancelListingButton = dynamic(() => import("./CancelListingButton"), {
   ssr: false,
@@ -44,38 +46,42 @@ type Props = {
 };
 
 export function Token(props: Props) {
-  const {
-    type,
-    nftContract,
-    allAuctions,
-    isLoading,
-    contractMetadata,
-    isRefetchingAllListings,
-    listingsInSelectedCollection,
-  } = useMarketplaceContext();
+  const { nftContract, contractMetadata, marketplaceContract } =
+    useMarketplaceContext();
+
+  const { data: apiNft } = useGetSingleNFT(+props.tokenId.toString());
 
   const { tokenId } = props;
   const account = useActiveAccount();
 
-  const { data: nft, isLoading: isLoadingNFT } = useReadContract(getERC721, {
+  const { data: nft, refetch: refetchNFT } = useReadContract(getERC721, {
     tokenId: tokenId,
     contract: nftContract,
     includeOwner: true,
   });
 
-  const listings = (listingsInSelectedCollection || []).filter(
-    (item) =>
-      item.assetContractAddress.toLowerCase() ===
-        nftContract.address.toLowerCase() && item.asset.id === BigInt(tokenId),
-  );
+  const { data: listings, refetch: refetchListings } = useReadContract({
+    queryOptions: {
+      refetchInterval: 10000,
+    },
+    contract: marketplaceContract,
+    method:
+      "function listings(uint256) view returns (address seller, uint256 price)",
+    params: [tokenId],
+  });
 
-  const auctions = (allAuctions || []).filter(
-    (item) =>
-      item.assetContractAddress.toLowerCase() ===
-        nftContract.address.toLowerCase() && item.asset.id === BigInt(tokenId),
-  );
+  async function refetch() {
+    refetchNFT().catch((e) => {
+      console.log(e);
+    });
+    refetchListings().catch((e) => {
+      console.log(e);
+    });
+  }
+  useInterval(refetch, 10000);
 
-  const allLoaded = !isLoadingNFT && !isLoading && !isRefetchingAllListings;
+  const listedByYou =
+    listings?.[0].toLowerCase() === account?.address.toLowerCase();
 
   const ownedByYou =
     nft?.owner?.toLowerCase() === account?.address.toLowerCase();
@@ -140,12 +146,20 @@ export function Token(props: Props) {
               <Text>Current owner</Text>
               <Flex direction="row">
                 <Heading>
-                  {nft?.owner ? shortenAddress(nft.owner) : "N/A"}{" "}
+                  {apiNft?.owner_wallet
+                    ? shortenAddress(apiNft?.owner_wallet)
+                    : "N/A"}{" "}
                 </Heading>
-                {ownedByYou && <Text color="gray">(You)</Text>}
+                {apiNft?.owner_wallet === account?.address && (
+                  <Text color="gray">(You)</Text>
+                )}
               </Flex>
               {account && nft && ownedByYou && (
-                <CreateListing tokenId={nft?.id} account={account} />
+                <CreateListing
+                  refetch={refetch}
+                  tokenId={nft?.id}
+                  account={account}
+                />
               )}
             </>
 
@@ -159,86 +173,28 @@ export function Token(props: Props) {
                 <Text>
                   <AccordionButton>
                     <Box as="span" flex="1" textAlign="left">
-                      Listings ({listings.length})
+                      Listings
                     </Box>
                     <AccordionIcon />
                   </AccordionButton>
                 </Text>
                 <AccordionPanel pb={4}>
-                  {listings.length > 0 ? (
-                    <TableContainer>
-                      <Table
-                        variant="simple"
-                        sx={{ "th, td": { borderBottom: "none" } }}
-                      >
-                        <Thead>
-                          <Tr>
-                            <Th>Price</Th>
-                            {type === "ERC1155" && <Th px={1}>Qty</Th>}
-                            <Th>Expiration</Th>
-                            <Th px={1}>From</Th>
-                            <Th>{""}</Th>
-                          </Tr>
-                        </Thead>
-                        <Tbody>
-                          {listings.map((item) => {
-                            const listedByYou =
-                              item.creatorAddress.toLowerCase() ===
-                              account?.address.toLowerCase();
-                            return (
-                              <Tr key={item.id.toString()}>
-                                <Td>
-                                  <Text>
-                                    {item.currencyValuePerToken.displayValue}{" "}
-                                    {item.currencyValuePerToken.symbol}
-                                  </Text>
-                                </Td>
-                                {type === "ERC1155" && (
-                                  <Td px={1}>
-                                    <Text>{item.quantity.toString()}</Text>
-                                  </Td>
-                                )}
-                                <Td>
-                                  <Text>
-                                    {getExpiration(item.endTimeInSeconds)}
-                                  </Text>
-                                </Td>
-                                <Td px={1}>
-                                  <Text>
-                                    {item.creatorAddress.toLowerCase() ===
-                                    account?.address.toLowerCase()
-                                      ? "You"
-                                      : shortenAddress(item.creatorAddress)}
-                                  </Text>
-                                </Td>
-                                {account && (
-                                  <Td>
-                                    {!listedByYou ? (
-                                      <BuyFromListingButton
-                                        account={account}
-                                        listing={item}
-                                      />
-                                    ) : (
-                                      <CancelListingButton
-                                        account={account}
-                                        listingId={item.id}
-                                      />
-                                    )}
-                                  </Td>
-                                )}
-                              </Tr>
-                            );
-                          })}
-                        </Tbody>
-                      </Table>
-                    </TableContainer>
-                  ) : (
-                    <Text>This item is not listed for sale</Text>
-                  )}
+                  {listings?.[0].toLowerCase() !== AddressZero.toLowerCase() &&
+                    (!listedByYou ? (
+                      <BuyFromListingButton
+                        refetch={refetch}
+                        tokenId={tokenId}
+                      />
+                    ) : (
+                      <CancelListingButton
+                        refetch={refetch}
+                        listingId={tokenId}
+                      />
+                    ))}
                 </AccordionPanel>
               </AccordionItem>
 
-              <RelatedListings excludedListingId={listings[0]?.id ?? -1n} />
+              {/*<RelatedListings excludedListingId={listings[0]?.id ?? -1n} />*/}
             </Accordion>
           </Box>
         </Flex>
