@@ -1,5 +1,6 @@
-import type { Chain } from "thirdweb";
+import { Chain, getContract } from "thirdweb";
 import { polygon, polygonAmoy } from "./chains";
+import { client } from "@/consts/client";
 
 export type NftContract = {
   address: string;
@@ -29,3 +30,10 @@ export const NFT_CONTRACTS: NftContract[] = [
     type: "ERC721",
   },
 ];
+const contractAddress = process.env.NEXT_PUBLIC_SPORT_NFT_CONTRACT as string;
+
+export const SportNFTContract = getContract({
+  address: contractAddress,
+  chain: polygon,
+  client,
+});

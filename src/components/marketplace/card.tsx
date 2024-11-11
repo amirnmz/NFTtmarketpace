@@ -18,9 +18,10 @@ import { useActiveAccount } from "thirdweb/react";
 
 interface NFTCardProps {
   nft: NFT;
+  isShowOnly?: boolean;
 }
 
-const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
+const NFTCard: React.FC<NFTCardProps> = ({ nft, isShowOnly }) => {
   const bg = useColorModeValue("white", "gray.800");
   const shadow = useColorModeValue("md", "xl");
   const textColor = useColorModeValue("gray.800", "white");
@@ -28,7 +29,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   const { data, isLoading } = useReadFromIPFS(nft?.uri);
   const account = useActiveAccount();
   if (isLoading) return <Skeleton height={200} width={200} />;
-
+  if (!data) return null;
   return (
     <Box
       maxW="sm"
@@ -52,20 +53,27 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           {data?.description}
         </Text>
 
-        <Stack direction="row" align="center" mb={4}>
-          <Icon as={FaEthereum} color={priceColor} />
-          <Text fontWeight="bold" fontSize="md" color={priceColor}>
-            {nft?.price || "N"} POL
-          </Text>
-        </Stack>
-
-        <Link href={"/token/" + nft?.nft_id}>
-          <Button colorScheme="teal" width="100%" leftIcon={<FaShoppingCart />}>
-            {account?.address === nft?.owner_wallet
-              ? "Cancel Listing"
-              : "Buy Now"}
-          </Button>
-        </Link>
+        {!isShowOnly && (
+          <Stack direction="row" align="center" mb={4}>
+            <Icon as={FaEthereum} color={priceColor} />
+            <Text fontWeight="bold" fontSize="md" color={priceColor}>
+              {nft?.price || "N"} POL
+            </Text>
+          </Stack>
+        )}
+        {!isShowOnly && (
+          <Link href={"/token/" + nft?.nft_id}>
+            <Button
+              colorScheme="teal"
+              width="100%"
+              leftIcon={<FaShoppingCart />}
+            >
+              {account?.address === nft?.owner_wallet
+                ? "Cancel Listing"
+                : "Buy Now"}
+            </Button>
+          </Link>
+        )}
       </Box>
     </Box>
   );
