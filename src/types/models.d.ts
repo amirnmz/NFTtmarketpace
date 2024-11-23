@@ -25,6 +25,23 @@ type NFT = BaseEntity & {
   price: string;
 };
 
+enum ContractAuthEnum {
+  MARKETER = "MARKETER",
+  MINTER = "MINTER",
+}
+
+type ContractAuth = BaseEntity & {
+  address: string;
+
+  name: string;
+
+  block_number: number;
+
+  type: ContractAuthEnum;
+
+  has_approved: boolean;
+};
+
 type PaginationType = {
   currentPage: number;
   nextPage: number;

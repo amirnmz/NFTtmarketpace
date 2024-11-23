@@ -12,6 +12,7 @@ export type NftContract = {
   thumbnailUrl?: string;
   slug?: string;
 };
+const contractAddress = process.env.NEXT_PUBLIC_SPORT_NFT_CONTRACT as string;
 
 /**
  * Below is a list of all NFT contracts supported by your marketplace(s)
@@ -21,7 +22,7 @@ export type NftContract = {
  */
 export const NFT_CONTRACTS: NftContract[] = [
   {
-    address: "0xf55A21Abd589bAA43cd9E13Af2a3cB5B5bF518f0",
+    address: contractAddress,
     chain: polygon,
     title: "Sport NFT",
     thumbnailUrl:
@@ -30,7 +31,6 @@ export const NFT_CONTRACTS: NftContract[] = [
     type: "ERC721",
   },
 ];
-const contractAddress = process.env.NEXT_PUBLIC_SPORT_NFT_CONTRACT as string;
 
 export const SportNFTContract = getContract({
   address: contractAddress,

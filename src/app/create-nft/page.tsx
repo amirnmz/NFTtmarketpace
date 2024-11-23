@@ -12,14 +12,13 @@ import {
   Textarea,
   useToast,
   Image,
+  Spinner,
 } from "@chakra-ui/react";
-import { useActiveAccount, useSendTransaction } from "thirdweb/react";
-import { getContract, prepareContractCall, sendTransaction } from "thirdweb";
-import { polygon } from "@/consts/chains";
-import { client } from "@/consts/client";
-
-const contractABI = Abi;
-const contractAddress = process.env.NEXT_PUBLIC_SPORT_NFT_CONTRACT as string;
+import { useActiveAccount, useReadContract } from "thirdweb/react";
+import { SportNFTContract } from "@/consts/nft_contracts";
+import { useHandleCreateNFT } from "@/hooks/useHandleCreateNFT";
+import { useHandleRequestMinter } from "@/hooks/useHandleMinterRequest";
+import { isAddress } from "thirdweb/utils";
 
 declare global {
   interface Window {
@@ -29,20 +28,14 @@ declare global {
 
 export default function CreateNFT() {
   const [title, setTitle] = useState("");
+  const [marketer, setMarketer] = useState("");
+  const [royalty, setRoyalty] = useState(0);
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
   // const activeAccount = useActiveAccount();
   const account = useActiveAccount();
-
-  const contract = getContract({
-    address: contractAddress,
-    chain: polygon,
-    client,
-  });
-
+  const toast = useToast();
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -50,198 +43,17 @@ export default function CreateNFT() {
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
-  console.log(BigInt(100), "<<");
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = provider.getSigner();
-        return signer;
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to connect wallet.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return null;
-      }
-    } else {
-      toast({
-        title: "Error",
-        description: "Please install MetaMask!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return null;
-    }
-  };
 
-  const uploadToPinata = async (imageFile: File) => {
-    const formData = new FormData();
-    formData.append("file", imageFile);
+  const { data, isPending } = useReadContract({
+    contract: SportNFTContract,
+    method:
+      "function getMinter(address _minter) view returns ((bool isApproved, bool isRequested, uint96 royaltyFraction))",
+    params: [account?.address as string],
+  });
 
-    const pinataApiKey = "48d4c8c5e597418efc05";
-    const pinataSecretApiKey =
-      "5a6e6ad9ddfa45e5e5fdaa16074d448f004357d5b4b9de2bc3cc64b560cb7c38";
-    try {
-      const res = await axios.post(
-        "https://api.pinata.cloud/pinning/pinFileToIPFS",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            pinata_api_key: pinataApiKey,
-            pinata_secret_api_key: pinataSecretApiKey,
-          },
-        },
-      );
-      return res.data.IpfsHash;
-    } catch (error) {
-      console.error("Error uploading image: ", error);
-      toast({
-        title: "Error",
-        description: "Failed to upload image to Pinata.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      throw error;
-    }
-  };
-
-  // Upload metadata to Pinata
-  const uploadMetadataToPinata = async (metadata: object) => {
-    const pinataApiKey = "48d4c8c5e597418efc05";
-    const pinataSecretApiKey =
-      "5a6e6ad9ddfa45e5e5fdaa16074d448f004357d5b4b9de2bc3cc64b560cb7c38";
-
-    try {
-      const res = await axios.post(
-        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
-        metadata,
-        {
-          headers: {
-            pinata_api_key: pinataApiKey,
-            pinata_secret_api_key: pinataSecretApiKey,
-          },
-        },
-      );
-      return res.data.IpfsHash;
-    } catch (error) {
-      console.error("Error uploading metadata: ", error);
-      toast({
-        title: "Error",
-        description: "Failed to upload metadata to Pinata.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      throw error;
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!title || !description || !image) {
-      toast({
-        title: "Error",
-        description: "Please fill all fields.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // if (!signer)
-      //   toast({
-      //     title: "Error",
-      //     description: "Please connect your wallet",
-      //     status: "error",
-      //     duration: 3000,
-      //     isClosable: true,
-      //   });
-
-      const imageHash = await uploadToPinata(image);
-      const imageUrl = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
-
-      const metadata = {
-        name: title,
-        description,
-        image: imageUrl,
-      };
-      const metadataHash = await uploadMetadataToPinata(metadata);
-      const tokenURI = `https://gateway.pinata.cloud/ipfs/${metadataHash}`;
-
-      // const signer = await connectWallet();
-
-      // const contract = new ethers.Contract(
-      //   contractAddress,
-      //   contractABI,
-      //   signer,
-      // ) as SportNFT;
-      if (!account?.address) {
-        throw new Error("No active account found.");
-      }
-      const transaction = prepareContractCall({
-        contract,
-        method:
-          "function mintNFT(address marketer, string tokenURI, uint256 minterRoyalty, uint256 marketerRoyalty) returns (uint256)",
-        params: [account.address, tokenURI, BigInt(100), BigInt(100)],
-      });
-      const { transactionHash } = await sendTransaction({
-        transaction,
-        account,
-      });
-
-      // console.log(contract, "<<");
-      // if (!address) {
-      //   throw new Error("No active account found.");
-      // }
-      // const tx = await contract.mintNFT(
-      //   address,
-      //   tokenURI,
-      //   ethers.BigNumber.from(100),
-      //   ethers.BigNumber.from(100),
-      // );
-      // await tx.wait();
-
-      if (transactionHash)
-        toast({
-          title: "Success",
-          description: "NFT created and minted successfully!",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      else {
-        toast({
-          title: "Error",
-          description: "Something went wrong during the minting process.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error: ", error);
-      toast({
-        title: "Error",
-        description: "Something went wrong during the minting process.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { mutate: handleUpload, isPending: isLoading } = useHandleCreateNFT();
+  const { mutate: handleRequestMinter, isPending: isLoadingMinterRequest } =
+    useHandleRequestMinter();
 
   return (
     <Box
@@ -259,6 +71,29 @@ export default function CreateNFT() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter NFT title"
+        />
+      </FormControl>
+      <FormControl mb="4">
+        <FormLabel htmlFor="marketer">Marketer</FormLabel>
+        <Input
+          id="marketer"
+          value={marketer}
+          onChange={(e) => setMarketer(e.target.value)}
+          placeholder="Marketer address"
+        />
+      </FormControl>
+      <FormControl mb="4">
+        <FormLabel htmlFor="royalty">Royalty %</FormLabel>
+        <Input
+          type="number"
+          id="royalty"
+          value={royalty}
+          onChange={(e) => {
+            if (+e.target.value >= 0 && +e.target.value < 5) {
+              setRoyalty(+e.target.value);
+            }
+          }}
+          placeholder="royalty%"
         />
       </FormControl>
       <FormControl mb="4">
@@ -287,9 +122,48 @@ export default function CreateNFT() {
         </Box>
       )}
 
-      <Button colorScheme="teal" onClick={handleUpload} isLoading={loading}>
-        Create NFT
-      </Button>
+      {isPending ? (
+        <Spinner />
+      ) : (
+        <>
+          {!data?.isRequested && (
+            <Box color={"red"}>You are not a official member</Box>
+          )}
+          {data?.isRequested && !data?.isApproved && (
+            <Box color={"red"}>You are not approved</Box>
+          )}
+          {!data?.isRequested ? (
+            <Button
+              isLoading={isLoadingMinterRequest}
+              colorScheme="teal"
+              onClick={handleRequestMinter}
+            >
+              Member request
+            </Button>
+          ) : (
+            <Button
+              disabled={!data?.isApproved}
+              colorScheme="teal"
+              onClick={() => {
+                if (!isAddress(marketer)) {
+                  toast({
+                    title: "Error",
+                    description: "Invalid Marketer address",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                  return;
+                }
+                handleUpload({ title, description, image, marketer, royalty });
+              }}
+              isLoading={isLoading}
+            >
+              Create NFT
+            </Button>
+          )}
+        </>
+      )}
     </Box>
   );
 }

@@ -47,7 +47,6 @@ export function ProfileSection(props: Props) {
 
   const { data: user } = useProfile();
   const { data: nfts, isLoading } = useGetUserNfts(address);
-
   const columns = useBreakpointValue({ base: 1, sm: 2, md: 2, lg: 2, xl: 4 });
   return (
     <Box px={{ lg: "50px", base: "20px" }}>

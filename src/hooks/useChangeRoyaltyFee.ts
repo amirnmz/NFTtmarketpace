@@ -5,7 +5,6 @@ import { useToast } from "@chakra-ui/react";
 
 export const useChangeRoyaltyFee = (
   _minterRoyalty: number,
-  _marketerRoyalty: number,
   tokenId: number | null,
 ) => {
   const { mutateAsync: sendTransaction, isPending } = useSendTransaction();
@@ -14,11 +13,9 @@ export const useChangeRoyaltyFee = (
     if (!tokenId) return;
     const transaction = prepareContractCall({
       contract: SportNFTContract,
-      method:
-        "function setRoyalities(uint256 _minterRoyalty, uint256 _marketerRoyalty, uint256 tokenId)",
+      method: "function setRoyalties(uint96 _minterRoyalty, uint256 tokenId)",
       params: [
         BigInt((+_minterRoyalty * 100).toString()),
-        BigInt((+_marketerRoyalty * 100).toString()),
         BigInt(tokenId?.toString()),
       ],
     });

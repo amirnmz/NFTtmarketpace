@@ -52,14 +52,24 @@ export default function Home() {
                 Own a piece of your favorite sports moments and athletes through
                 our unique NFT marketplace.
               </Text>
-              <Button
-                as={Link}
-                href="/market"
-                colorScheme={buttonColorScheme}
-                size="lg"
-              >
-                Explore Marketplace
-              </Button>
+              <Flex direction={"column"} gap={3}>
+                <Button
+                  as={Link}
+                  href="/market"
+                  colorScheme={buttonColorScheme}
+                  size="lg"
+                >
+                  Explore Marketplace
+                </Button>
+                <Button
+                  as={Link}
+                  href="/marketer"
+                  colorScheme={buttonColorScheme}
+                  size="lg"
+                >
+                  Become Marketer
+                </Button>
+              </Flex>
             </Box>
             <Box
               flex="1"
