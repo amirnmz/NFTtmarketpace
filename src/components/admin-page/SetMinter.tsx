@@ -17,7 +17,7 @@ export const SetMinter = () => {
         flexDirection={"column"}
         gap={2}
       >
-        <label htmlFor="input"> Marketer </label>
+        <label htmlFor="input"> Minter </label>
         <Input value={minter} onChange={(e) => setMinter(e.target.value)} />
         <Button
           isLoading={isPending}
