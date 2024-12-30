@@ -13,6 +13,9 @@ export const useCheckRequests = () => {
           is_active: true,
           type: "MINTER",
         },
+        relation: {
+          user: true,
+        },
       },
     });
     return res.data;

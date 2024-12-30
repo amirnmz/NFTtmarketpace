@@ -15,6 +15,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
+  Flex,
   useColorMode,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -63,9 +64,16 @@ export function SideMenu() {
               <ConnectBtn />
             </Box>
             {account && (
-              <Link href="/profile">
-                Profile {ensName ? `(${ensName})` : ""}
-              </Link>
+              <Flex mt={1} flexDirection={"column"} gap={2}>
+                <Link href="/create-nft">
+                  <Button height="56px">Create NFT</Button>
+                </Link>
+                <Link href="/profile">
+                  <Button height="56px">
+                    Profile {ensName ? `(${ensName})` : ""}
+                  </Button>
+                </Link>
+              </Flex>
             )}
           </DrawerBody>
           <DrawerFooter>

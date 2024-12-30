@@ -13,6 +13,9 @@ export const useCheckMarketerRequests = () => {
           is_active: true,
           type: "MARKETER",
         },
+        relation: {
+          user: true,
+        },
       },
     });
     return res.data;

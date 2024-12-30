@@ -1,10 +1,11 @@
 "use client";
 
-import { Button, Flex, Spinner, Text } from "@chakra-ui/react";
+import { Button, Flex, Input, Spinner, Text } from "@chakra-ui/react";
 import { SportNFTContract } from "@/consts/nft_contracts";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { useHandleMarketerRequest } from "@/hooks/useHandleMarketerRequest";
-import { ethers } from "ethers";
+import { useRef, useState } from "react";
+import { useAddMarketerProof } from "@/hooks/api/useAddMarketerProof";
 
 export default function Page() {
   const account = useActiveAccount();
@@ -19,6 +20,12 @@ export default function Page() {
     isPending: isMutating,
     data: dataRequest,
   } = useHandleMarketerRequest();
+
+  const { mutateAsync: addMarketerProof, isPending: isUploadingFile } =
+    useAddMarketerProof();
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   return (
     <Flex
@@ -46,16 +53,43 @@ export default function Page() {
             <Text color={data?.isApproved ? "green" : "red"}>
               {data?.isApproved ? "Active" : "Not Active"}
             </Text>
+
             {!data?.isApproved && (
-              <Button
-                disabled={data?.isRequested || !!dataRequest}
-                isLoading={isMutating}
-                onClick={() => mutate()}
-              >
-                {data?.isRequested
-                  ? "Your request is pending"
-                  : "Become marketer"}
-              </Button>
+              <Flex flexDirection={"column"} gap={5} alignItems={"center"}>
+                <Input
+                  sx={{
+                    display: "none",
+                  }}
+                  type="file"
+                  ref={fileRef}
+                  accept="application/pdf,image/jpeg,image/png"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+                <Button
+                  disabled={
+                    isUploadingFile || data?.isRequested || !!dataRequest
+                  }
+                  onClick={() => fileRef.current?.click()}
+                >
+                  Upload proof
+                </Button>
+                {file && <Text>{file.name}</Text>}
+
+                <Button
+                  disabled={data?.isRequested || !!dataRequest || !file}
+                  isLoading={isMutating || isUploadingFile}
+                  onClick={async () => {
+                    if (file) {
+                      await addMarketerProof(file);
+                      mutate();
+                    }
+                  }}
+                >
+                  {data?.isRequested
+                    ? "Your request is pending"
+                    : "Become marketer"}
+                </Button>
+              </Flex>
             )}
             {data?.royaltyFraction && (
               <Text>Royalty: {+data?.royaltyFraction.toString() / 100} % </Text>

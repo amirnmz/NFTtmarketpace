@@ -21,11 +21,13 @@ export function Providers({ children }: { children: ReactNode }) {
         <ColorModeScript
           initialColorMode={chakraThemeConfig.initialColorMode}
         />
-        <AuthProvider>
-          <QueryClientProvider client={queryClient}>
-            <ThirdwebProviderV5>{children}</ThirdwebProviderV5>
-          </QueryClientProvider>
-        </AuthProvider>
+        <ThirdwebProviderV5>
+          <AuthProvider>
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
+          </AuthProvider>
+        </ThirdwebProviderV5>
       </ChakraProvider>
     );
 }

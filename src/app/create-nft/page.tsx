@@ -1,8 +1,5 @@
 "use client";
-import Abi from "./abi.json";
-import { useState } from "react";
-import { ethers } from "ethers";
-import axios from "axios";
+import { useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -13,12 +10,15 @@ import {
   useToast,
   Image,
   Spinner,
+  Flex,
+  Text,
 } from "@chakra-ui/react";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 import { SportNFTContract } from "@/consts/nft_contracts";
 import { useHandleCreateNFT } from "@/hooks/useHandleCreateNFT";
 import { useHandleRequestMinter } from "@/hooks/useHandleMinterRequest";
 import { isAddress } from "thirdweb/utils";
+import { useAddMinterProof } from "@/hooks/api/useAddMinterProof";
 
 declare global {
   interface Window {
@@ -36,6 +36,7 @@ export default function CreateNFT() {
   // const activeAccount = useActiveAccount();
   const account = useActiveAccount();
   const toast = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -43,7 +44,9 @@ export default function CreateNFT() {
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
-
+  const [file, setFile] = useState<File | null>(null);
+  const { mutateAsync: addMinterProof, isPending: isUploadingFile } =
+    useAddMinterProof();
   const { data, isPending } = useReadContract({
     contract: SportNFTContract,
     method:
@@ -133,18 +136,45 @@ export default function CreateNFT() {
             <Box color={"red"}>You are not approved</Box>
           )}
           {!data?.isRequested ? (
-            <Button
-              isLoading={isLoadingMinterRequest}
-              colorScheme="teal"
-              onClick={handleRequestMinter}
-            >
-              Member request
-            </Button>
+            <Flex flexDirection={"column"} gap={2}>
+              <Input
+                type="file"
+                accept="image/*,application/pdf"
+                ref={fileRef}
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFile(file);
+                  }
+                }}
+              />
+              <Button
+                disabled={isUploadingFile || isLoadingMinterRequest}
+                onClick={() => fileRef.current?.click()}
+              >
+                Upload Proof
+              </Button>
+              <Text>{file ? file.name : "No file selected"}</Text>
+              <Button
+                disabled={!file}
+                isLoading={isLoadingMinterRequest}
+                colorScheme="teal"
+                onClick={async () => {
+                  if (file) {
+                    await addMinterProof(file);
+                  }
+                  handleRequestMinter();
+                }}
+              >
+                Member request
+              </Button>
+            </Flex>
           ) : (
             <Button
               disabled={!data?.isApproved}
               colorScheme="teal"
-              onClick={() => {
+              onClick={async () => {
                 if (!isAddress(marketer)) {
                   toast({
                     title: "Error",
@@ -155,7 +185,14 @@ export default function CreateNFT() {
                   });
                   return;
                 }
-                handleUpload({ title, description, image, marketer, royalty });
+
+                handleUpload({
+                  title,
+                  description,
+                  image,
+                  marketer,
+                  royalty,
+                });
               }}
               isLoading={isLoading}
             >
